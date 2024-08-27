@@ -20,35 +20,51 @@ type Contents = {
 
 export type CSSProperties = StringKeysAndValuesOnly<Partial<CSSStyleDeclaration>>;
 
-type BuildOptions<E, S> = {
-	elementName?: E,
-	attributes?: GenericObject,
-	className?: string,
-	style?: CSSProperties,
-	children?: HTMLElement[],
-	textContent?: string,
-	state?: S,
-	prefire?: (el: DivByDefault<E>, state?: S) => void,
-	events?: Record<string, (event: Event, element: DivByDefault<E>, state?: S) => void>,
-} & Contents;
+type UpdateFunction<E, S> = (el: DivByDefault<E>, state?: S) => void;
+type EventsRecord<E, S> =
+	Partial<
+		Record<
+			keyof HTMLElementEventMap,
+			(
+				event: Event,
+				element: DivByDefault<E>,
+				state?: S,
+				update?: () => void
+			) => void
+		>
+	>;
 
-function TypedKeys<T extends Record<any, any>>(value: T): (keyof T)[]{
+type BuildOptions<E, S> = Partial<{
+	elementName: E,
+	attributes: GenericObject,
+	className: string,
+	style: CSSProperties,
+	children: HTMLElement[],
+	textContent: string,
+	state: S,
+	events: EventsRecord<E, S>,
+	prefire: UpdateFunction<E, S>,
+	update: UpdateFunction<E, S>
+	
+} & Contents>;
+
+function typedKeys<T extends Record<any, any>>(value: T): (keyof T)[]{
 	return Object.keys(value);
 }
 
 export function buildElement<ElementType extends TagName | undefined, StateType = GenericObject>
 	({
-		className,
-		prefire,
-		children,
-		style,
+		elementName,
 		attributes,
+		className,
+		style,
+		children,
 		textContent,
-		events,
 		state,
-		elementName
+		events,
+		prefire,
+		update
 	}: BuildOptions<ElementType, StateType> = {}): DivByDefault<ElementType> {
-	const _state = state;
 	const el = document.createElement((elementName ?? "div") as TagName) as DivByDefault<ElementType>;
 
 	if (className) el.className = className;
@@ -57,7 +73,7 @@ export function buildElement<ElementType extends TagName | undefined, StateType 
 	else if (textContent)
 		el.textContent = textContent;
 	if (style)
-		for (const styleKey of TypedKeys(style)){
+		for (const styleKey of typedKeys(style)){
 			if (styleKey.includes("-"))
 				el.style.setProperty(styleKey, style[styleKey] ?? null);
 			else
@@ -69,8 +85,8 @@ export function buildElement<ElementType extends TagName | undefined, StateType 
 
 	if (events)
 		for (const eventKey of Object.keys(events))
-			el.addEventListener(eventKey, e => events[eventKey](e, el, _state));
+			el.addEventListener(eventKey, e => events[eventKey](e, el, state, () => update?.(el, state)));
 
-	if (prefire) prefire(el, _state);
+	if (prefire) prefire(el, state);
 	return el;
 }
