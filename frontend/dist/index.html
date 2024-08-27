@@ -24,6 +24,12 @@
 				--color-accent-plus: #FF5722;
 				--color-text: #EEEEEE;
 
+				--color-gh-0: #161b22;
+				--color-gh-1: #0e4429;
+				--color-gh-2: #006d32;
+				--color-gh-3: #26a641;
+				--color-gh-4: #39d353;
+
 				color: var(--color-text);
 				background-color: var(--color-base);
 			}
@@ -73,6 +79,10 @@
 				margin-bottom: var(--spacing);
 			}
 
+			#canvas-container {
+				max-width: 90vw;
+				overflow-x: auto;
+			}
 			.canvas-grid {
 				--cell-size: 10px;
 
@@ -89,12 +99,13 @@
 				width: var(--cell-size);
 				height: var(--cell-size);
 				border-radius: calc(var(--cell-size) * .2);
+				outline: 1px solid rgba(255, 255, 255, 0.05);
 			}
 
 		</style>
 	</head>
 	<body>
-		
+		<div id="canvas-container"></div>
 		<script src="js/index.js"></script>
 	</body>
 </html>

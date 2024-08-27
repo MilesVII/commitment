@@ -42,9 +42,9 @@ type BuildOptions<E, S> = Partial<{
 	children: HTMLElement[],
 	textContent: string,
 	state: S,
-	events: EventsRecord<E, S>,
 	prefire: UpdateFunction<E, S>,
-	update: UpdateFunction<E, S>
+	update: UpdateFunction<E, S>,
+	events: EventsRecord<E, S>
 	
 } & Contents>;
 
@@ -61,9 +61,9 @@ export function buildElement<ElementType extends TagName | undefined, StateType 
 		children,
 		textContent,
 		state,
-		events,
 		prefire,
-		update
+		update,
+		events
 	}: BuildOptions<ElementType, StateType> = {}): DivByDefault<ElementType> {
 	const el = document.createElement((elementName ?? "div") as TagName) as DivByDefault<ElementType>;
 

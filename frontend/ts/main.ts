@@ -17,14 +17,15 @@ function buildCell() {
 				update!();
 			},
 			pointerenter: (e, _el, state, update) => {
-				if ((e as PointerEvent).buttons > 0)
-				state!.color = 2;
+				if ((e as PointerEvent).buttons <= 0) return;
+
+				state!.color = 4;
 
 				update!();
 			}
 		},
 		update(el, state) {
-			el.style.backgroundColor = state!.color === 0 ? "transparent" : "var(--color-accent-plus)";
+			el.style.backgroundColor = `var(--color-gh-${state!.color})`;
 		}
 	});
 }
@@ -42,10 +43,8 @@ function buildGrid() {
 }
 
 function main() {
-	document.body.innerHTML = "";
-
 	const canvas = buildGrid();
-	document.body.append(canvas);
+	document.querySelector("#canvas-container")?.append(canvas);
 };
 
 main();
