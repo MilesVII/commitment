@@ -1,7 +1,6 @@
+import { type APICellData, type CellColor, fetchUser } from "./api";
 import { buildElement } from "./domkraft";
-import { range } from "./utils";
-
-type CellColor = 0 | 1 | 2 | 3 | 4;
+import { range, repeat, WEEKDAY_NAMES } from "./utils";
 
 const globalState = {
 	selectedColor: 0 as CellColor,
@@ -10,20 +9,39 @@ const globalState = {
 
 main();
 
-function main() {
+function main() {	
+	document.querySelector("#form-username")?.addEventListener("submit", (event) => {
+		event.preventDefault();
+		onFetchRequested();
+	});
+};
+
+async function onFetchRequested() {
+	const username = document.querySelector<HTMLInputElement>("#field-username");
+	if (!username?.value) return;
+	const contributions = await fetchUser(username.value);
+	
+	if (!contributions) return;
+	
+	const pads = contributions[0]?.weekday ?? 0;
+	const grid = buildGrid(pads, contributions);
+
+	const controls = document.querySelector("#controls-container");
+	controls!.innerHTML = "";
+	
+	const canvasContainer = document.querySelector("#canvas-container");
+	canvasContainer!.innerHTML = "";
+	canvasContainer?.append(grid.element);
+	
 	const palette = buildPalette();
-	const canvas = buildGrid();
 	const updateScale = (scale: number) => {
-		canvas.element.style.setProperty("--cell-size", `${scale * 70}px`);
+		grid.element.style.setProperty("--cell-size", `${scale * 70}px`);
 	}
 	const scaler = buildScaler(updateScale);
 
-	const controls = document.querySelector("#controls-container");
-	
 	controls?.append(palette.element);
 	controls?.append(scaler.element);
-	document.querySelector("#canvas-container")?.append(canvas.element);
-};
+}
 
 function buildPalette() {
 	function buildColorOption(color: CellColor, onSelect: (element: HTMLElement) => void) {
@@ -86,10 +104,11 @@ function buildScaler(updateScale: (scale: number) => void) {
 	});
 }
 
-function buildGrid() {
-	const gridContents = range(0, 370).map(index =>
-		buildCell()
-	);
+function buildGrid(pads: number, cellData: APICellData[]) {
+	const gridContents = [
+		...repeat(pads, null),
+		...cellData
+	].map(buildCell);
 
 	return buildElement({
 		elementName: "div",
@@ -98,23 +117,42 @@ function buildGrid() {
 	});
 }
 
-function buildCell() {
+function buildCell(data: APICellData | null) {
+	if (!data)
+		return buildElement({
+			elementName: "div",
+			className: "canvas-grid-cell",
+			style: {
+				visibility: "hidden"
+			}
+		});
+
 	return buildElement({
 		elementName: "div",
 		className: "canvas-grid-cell",
+		attributes: {
+			title: `${data.dateOriginal}: ${WEEKDAY_NAMES[data.weekday]}`
+		},
 		state: {
-			color: 0 as CellColor,
+			minColor: data.cellColor,
+			color: data.cellColor,
 		},
 		events: {
 			pointerdown: (_e, _el, state, update) => {
-				state!.color = globalState.selectedColor;
+				state!.color = Math.max(
+					state!.minColor,
+					globalState.selectedColor
+				) as CellColor;
 
 				update!();
 			},
 			pointerenter: (e, _el, state, update) => {
 				if ((e as PointerEvent).buttons <= 0) return;
 
-				state!.color = globalState.selectedColor;
+				state!.color = Math.max(
+					state!.minColor,
+					globalState.selectedColor
+				) as CellColor;
 
 				update!();
 			}
