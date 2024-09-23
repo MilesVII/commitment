@@ -4,7 +4,8 @@ import { range } from "./utils";
 type CellColor = 0 | 1 | 2 | 3 | 4;
 
 const globalState = {
-	selectedColor: 0 as CellColor
+	selectedColor: 0 as CellColor,
+	username: null as (null | string)
 }
 
 main();
@@ -16,9 +17,11 @@ function main() {
 		canvas.element.style.setProperty("--cell-size", `${scale * 70}px`);
 	}
 	const scaler = buildScaler(updateScale);
+
+	const controls = document.querySelector("#controls-container");
 	
-	document.body.append(palette.element);
-	document.body.append(scaler.element);
+	controls?.append(palette.element);
+	controls?.append(scaler.element);
 	document.querySelector("#canvas-container")?.append(canvas.element);
 };
 
@@ -29,19 +32,16 @@ function buildPalette() {
 			style: {
 				backgroundColor: getCssColor(color)
 			},
-			state: {
-				selected: false,
-				color
-			},
 			events: {
 				click: (_e, el) => onSelect(el)
 			},
 			update: (element, state) => {
-				if (state!.selected)
+				if (color === globalState.selectedColor)
 					element.classList.add("selected");
 				else
 					element.classList.remove("selected");
-			}
+			},
+			prefireUpdate: true
 		});
 	}
 
@@ -51,12 +51,9 @@ function buildPalette() {
 			buildColorOption(
 				optionColor,
 				(element) => {
-					options.forEach(o => {
-						o.state!.selected = optionColor === o.state!.color;
-						o.update()
-					});
-
 					globalState.selectedColor = optionColor;
+					options.forEach(o => o.update());
+
 				}
 			)
 		);
@@ -124,7 +121,8 @@ function buildCell() {
 		},
 		update(el, state) {
 			el.style.backgroundColor = getCssColor(state!.color);
-		}
+		},
+		prefireUpdate: true
 	});
 }
 

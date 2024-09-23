@@ -44,8 +44,8 @@ type BuildOptions<E, S> = Partial<{
 	state: S,
 	prefire: UpdateFunction<E, S>,
 	update: UpdateFunction<E, S>,
-	events: EventsRecord<E, S>
-	
+	events: EventsRecord<E, S>,
+	prefireUpdate?: boolean
 } & Contents>;
 
 type Return<E, S> = {
@@ -69,7 +69,8 @@ export function buildElement<ElementType extends TagName | undefined, StateType 
 		state,
 		prefire,
 		update,
-		events
+		events,
+		prefireUpdate
 	}: BuildOptions<ElementType, StateType> = {}): Return<ElementType, StateType> {
 	const el = document.createElement((elementName ?? "div") as TagName) as DivByDefault<ElementType>;
 
@@ -93,7 +94,9 @@ export function buildElement<ElementType extends TagName | undefined, StateType 
 		for (const eventKey of Object.keys(events))
 			el.addEventListener(eventKey, e => events[eventKey](e, el, state, () => update?.(el, state)));
 
+	if (prefireUpdate && update) update(el, state);
 	if (prefire) prefire(el, state);
+	
 	return {
 		element: el,
 		state,
