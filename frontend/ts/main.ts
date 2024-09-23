@@ -38,9 +38,9 @@ function buildPalette() {
 			},
 			update: (element, state) => {
 				if (state!.selected)
-					element.classList.remove("selected");
-				else
 					element.classList.add("selected");
+				else
+					element.classList.remove("selected");
 			}
 		});
 	}
@@ -53,11 +53,9 @@ function buildPalette() {
 				(element) => {
 					options.forEach(o => {
 						o.state!.selected = optionColor === o.state!.color;
-						o.element.classList.remove("selected")
 						o.update()
 					});
 
-					element.classList.add("selected");
 					globalState.selectedColor = optionColor;
 				}
 			)
