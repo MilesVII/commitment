@@ -8,78 +8,12 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+		
+		<link rel="stylesheet" href="css/core.css"/>
+		<link rel="stylesheet" href="css/inputs.css"/>
+		<link rel="stylesheet" href="css/layouts.css"/>
+
 		<style>
-			:root {
-				color-scheme: only dark;
-				font: normal 300 3vmax Roboto;
-
-				--spacing: 1vmax;
-				--bording: .25vmax;
-				--padding: .5vmax;
-				--rounding: .5vmax;
-
-				--color-base: #222831;
-				--color-sub: #393E46;
-				--color-accent: #00ADB5;
-				--color-accent-plus: #FF5722;
-				--color-text: #EEEEEE;
-
-				--color-gh-0: #161b22;
-				--color-gh-1: #0e4429;
-				--color-gh-2: #006d32;
-				--color-gh-3: #26a641;
-				--color-gh-4: #39d353;
-
-				color: var(--color-text);
-				background-color: var(--color-base);
-			}
-
-			* {
-				box-sizing: border-box;
-			}
-
-			html, body {
-				margin: 0;
-				width: 100%;
-				height: 100%;
-			}
-
-			body {
-				display: flex;
-				flex-flow: column nowrap;
-				place-items: center;
-				place-content: center;
-				padding: var(--spacing);
-			}
-
-			button {
-				background: none;
-				color: inherit;
-				border: var(--bording) solid var(--color-sub);
-				border-radius: var(--rounding);
-
-				padding: var(--padding);
-				font: inherit;
-				cursor: pointer;
-				outline: inherit;
-			}
-			button:hover, button:focus {
-				border-color: var(--color-accent);
-			}
-			button:active {
-				border-color: var(--color-accent-plus);
-			}
-			button[disabled] {
-				pointer-events: none !important;
-			}
-			
-			summary {
-				cursor: pointer;
-			}
-			details[open] summary {
-				margin-bottom: var(--spacing);
-			}
-
 			.palette {
 				--cell-size: 40px;
 
@@ -115,16 +49,28 @@
 			.canvas-grid-cell {
 				cursor: pointer;
 				aspect-ratio: 1/1;
-				background-color: gray;
 				width: var(--cell-size);
 				height: var(--cell-size);
 				border-radius: calc(var(--cell-size) * .2);
 				outline: 1px solid rgba(255, 255, 255, 0.05);
 			}
-
 		</style>
 	</head>
 	<body>
+		<div class="container row content-width wide">
+			<form class="wide">
+				<fieldset class="grow container row">
+					<legend>
+						<label for="username">Github username</label>
+					</legend>
+					<input type="text" id="username" class="field"></input>
+					<button type=""submit>fetch</button>
+				</fieldset>
+			</form>
+		</div>
+		<div class="container column content-width center-contents" id="controls-container">
+
+		</div>
 		<div id="canvas-container"></div>
 		<script src="js/index.js"></script>
 	</body>

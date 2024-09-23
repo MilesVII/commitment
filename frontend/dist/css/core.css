@@ -1,0 +1,73 @@
+/* Seventh Design System */
+
+@media screen and (orientation: landscape) {
+	:root {
+		--reference-unit: 2.35vmin;
+		--dims-content-width: 70vmin;
+		--dims-popup-width: min(60vw, 60vmin);
+		--dims-popup-height: 50vmin;
+	}
+}
+
+@media screen and (orientation: portrait) {
+	:root {
+		--reference-unit: 4.2vmin;
+		--dims-content-width: 100vmin;
+		--dims-popup-width: 100%;
+		--dims-popup-height: 40vh;
+	}
+}
+
+
+:root {
+	color-scheme: only dark;
+	font: normal 300 3vmax Roboto;
+	
+	--dims-line:     calc(.1 * var(--reference-unit));
+	--dims-padding:  calc(.2 * var(--reference-unit));
+	--dims-rounding: calc(.3 * var(--reference-unit));
+	--dims-spacing:  calc(.4 * var(--reference-unit));
+	--dims-font-regular: calc(1 * var(--reference-unit));
+
+	--color-base: #222831;
+	--color-sub: #393E46;
+	--color-accent: #00ADB5;
+	--color-accent-plus: #FF5722;
+	--color-secondary: #444444;
+	--color-text: #EEEEEE;
+
+	--color-gh-0: #161b22;
+	--color-gh-1: #0e4429;
+	--color-gh-2: #006d32;
+	--color-gh-3: #26a641;
+	--color-gh-4: #39d353;
+
+	color: var(--color-text);
+	background-color: var(--color-base);
+	
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	
+	font-family: Roboto, sans-serif;
+	font-size: var(--dims-font-regular);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html, body {
+	margin: 0;
+	width: 100%;
+	height: 100%;
+}
+
+body {
+	display: flex;
+	flex-flow: column nowrap;
+	place-items: center;
+	place-content: center;
+	padding: var(--dims-spacing);
+}
