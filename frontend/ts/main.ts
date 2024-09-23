@@ -39,8 +39,17 @@ async function onFetchRequested() {
 	}
 	const scaler = buildScaler(updateScale);
 
+	const resetButton = buildElement({
+		elementName: "button",
+		textContent: "reset",
+		events: {
+			"click": () => grid.reset()
+		}
+	});
+
 	controls?.append(palette.element);
 	controls?.append(scaler.element);
+	controls?.append(resetButton.element);
 }
 
 function buildPalette() {
@@ -110,24 +119,32 @@ function buildGrid(pads: number, cellData: APICellData[]) {
 		...cellData
 	].map(buildCell);
 
-	return buildElement({
+	const grid = buildElement({
 		elementName: "div",
 		className: "canvas-grid",
 		children: gridContents.map(c => c.element)
 	});
+
+	return {
+		...grid,
+		reset: () => gridContents.forEach(cell => cell && cell.reset())
+	}
 }
 
 function buildCell(data: APICellData | null) {
 	if (!data)
-		return buildElement({
-			elementName: "div",
-			className: "canvas-grid-cell",
-			style: {
-				visibility: "hidden"
-			}
-		});
+		return {
+			...buildElement({
+				elementName: "div",
+				className: "canvas-grid-cell",
+				style: {
+					visibility: "hidden"
+				}
+			}),
+			reset: () => {}
+		};
 
-	return buildElement({
+	const cell = buildElement({
 		elementName: "div",
 		className: "canvas-grid-cell",
 		attributes: {
@@ -162,6 +179,14 @@ function buildCell(data: APICellData | null) {
 		},
 		prefireUpdate: true
 	});
+
+	return {
+		...cell,
+		reset: () => {
+			cell.state!.color = cell.state!.minColor;
+			cell.update();
+		}
+	}
 }
 
 function getCssColor(color: CellColor) {
