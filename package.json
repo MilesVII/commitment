@@ -1,13 +1,10 @@
 {
 	"type": "module",
-	"dependencies": {
-	},
 	"devDependencies": {
-	  "esbuild": "0.20.0"
+		"esbuild": "0.20.0"
 	},
 	"scripts": {
-	  "build": "esbuild frontend/ts/main.ts --bundle --sourcemap         --outfile=frontend/dist/js/index.js",
-	  "watch": "esbuild frontend/ts/main.ts --bundle --sourcemap --watch --outfile=frontend/dist/js/index.js"
+		"build": "esbuild frontend/ts/main.ts --bundle --sourcemap         --outfile=frontend/dist/js/index.js",
+		"watch": "esbuild frontend/ts/main.ts --bundle --sourcemap --watch --outfile=frontend/dist/js/index.js"
 	}
-  }
-  
+}

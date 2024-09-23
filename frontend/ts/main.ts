@@ -13,40 +13,59 @@ function main() {
 	const palette = buildPalette();
 	const canvas = buildGrid();
 	const updateScale = (scale: number) => {
-		canvas.style.setProperty("--cell-size", `${scale * 70}px`);
+		canvas.element.style.setProperty("--cell-size", `${scale * 70}px`);
 	}
 	const scaler = buildScaler(updateScale);
 	
-	document.body.append(palette);
-	document.body.append(scaler);
-	document.querySelector("#canvas-container")?.append(canvas);
+	document.body.append(palette.element);
+	document.body.append(scaler.element);
+	document.querySelector("#canvas-container")?.append(canvas.element);
 };
 
 function buildPalette() {
-	function buildColorOption(color: CellColor, onSelect: (color: CellColor, element: HTMLElement) => void) {
+	function buildColorOption(color: CellColor, onSelect: (element: HTMLElement) => void) {
 		return buildElement({
 			className: "palette-option",
 			style: {
 				backgroundColor: getCssColor(color)
 			},
-			prefire: (el) => {
-				if (globalState.selectedColor === color)
-					el.classList.add("selected");
+			state: {
+				selected: false,
+				color
 			},
 			events: {
-				click: (_e, el) => onSelect(color, el)
+				click: (_e, el) => onSelect(el)
+			},
+			update: (element, state) => {
+				if (state!.selected)
+					element.classList.remove("selected");
+				else
+					element.classList.add("selected");
 			}
 		});
 	}
 
-	const options = range(0, 5).map(color => buildColorOption(color as CellColor, (color, element) => {
-		options.forEach(o => o.classList.remove("selected"));
-		element.classList.add("selected");
-		globalState.selectedColor = color;
-	}));
+	const options =
+		(range(0, 5)  as CellColor[])
+		.map((optionColor) =>
+			buildColorOption(
+				optionColor,
+				(element) => {
+					options.forEach(o => {
+						o.state!.selected = optionColor === o.state!.color;
+						o.element.classList.remove("selected")
+						o.update()
+					});
+
+					element.classList.add("selected");
+					globalState.selectedColor = optionColor;
+				}
+			)
+		);
+
 	return buildElement({
 		className: "palette",
-		children: options
+		children: options.map(o => o.element)
 	});
 }
 
@@ -80,7 +99,7 @@ function buildGrid() {
 	return buildElement({
 		elementName: "div",
 		className: "canvas-grid",
-		children: gridContents
+		children: gridContents.map(c => c.element)
 	});
 }
 

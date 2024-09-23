@@ -48,6 +48,12 @@ type BuildOptions<E, S> = Partial<{
 	
 } & Contents>;
 
+type Return<E, S> = {
+	element: DivByDefault<E>,
+	state?: S,
+	update: () => void
+}
+
 function typedKeys<T extends Record<any, any>>(value: T): (keyof T)[]{
 	return Object.keys(value);
 }
@@ -64,7 +70,7 @@ export function buildElement<ElementType extends TagName | undefined, StateType 
 		prefire,
 		update,
 		events
-	}: BuildOptions<ElementType, StateType> = {}): DivByDefault<ElementType> {
+	}: BuildOptions<ElementType, StateType> = {}): Return<ElementType, StateType> {
 	const el = document.createElement((elementName ?? "div") as TagName) as DivByDefault<ElementType>;
 
 	if (className) el.className = className;
@@ -88,5 +94,9 @@ export function buildElement<ElementType extends TagName | undefined, StateType 
 			el.addEventListener(eventKey, e => events[eventKey](e, el, state, () => update?.(el, state)));
 
 	if (prefire) prefire(el, state);
-	return el;
+	return {
+		element: el,
+		state,
+		update: () => update?.(el, state)
+	};
 }
