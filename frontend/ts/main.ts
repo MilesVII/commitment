@@ -1,4 +1,5 @@
 import { type APICellData, type CellColor, fetchUser } from "./api";
+import { generateCommandSequence, requiredCommitCount } from "./commits";
 import { buildElement } from "./domkraft";
 import { range, repeat, WEEKDAY_NAMES } from "./utils";
 
@@ -39,6 +40,8 @@ async function onFetchRequested() {
 	}
 	const scaler = buildScaler(updateScale);
 
+	let link: null | ReturnType<typeof buildDownloadLink> = null;
+
 	const resetButton = buildElement({
 		elementName: "button",
 		textContent: "reset",
@@ -46,10 +49,30 @@ async function onFetchRequested() {
 			"click": () => grid.reset()
 		}
 	});
+	const generateButton = buildElement({
+		elementName: "button",
+		textContent: "generate",
+		events: {
+			"click": () => {
+				const commits = grid.getLevels().filter(c => c.commitCount > 0);
+				const commands = generateCommandSequence(commits);
+				
+				if (link) link.destroy()
+				link = buildDownloadLink(commands, "commits.bat");
+				
+				controls?.append(link.element);
+			}
+		}
+	})
+	const buttonRow = buildElement({
+		elementName: "div",
+		className: "container row wide",
+		children: [resetButton.element, generateButton.element]
+	})
 
 	controls?.append(palette.element);
 	controls?.append(scaler.element);
-	controls?.append(resetButton.element);
+	controls?.append(buttonRow.element);
 }
 
 function buildPalette() {
@@ -114,10 +137,20 @@ function buildScaler(updateScale: (scale: number) => void) {
 }
 
 function buildGrid(pads: number, cellData: APICellData[]) {
+	const deadCells = repeat(pads, null).map(
+		() => buildElement({
+			elementName: "div",
+			className: "canvas-grid-cell",
+			style: {
+				visibility: "hidden"
+			}
+		})
+	);
+	const liveCells = cellData.map(buildCell);
 	const gridContents = [
-		...repeat(pads, null),
-		...cellData
-	].map(buildCell);
+		...deadCells,
+		...liveCells
+	];
 
 	const grid = buildElement({
 		elementName: "div",
@@ -127,23 +160,16 @@ function buildGrid(pads: number, cellData: APICellData[]) {
 
 	return {
 		...grid,
-		reset: () => gridContents.forEach(cell => cell && cell.reset())
+		reset: () => liveCells.forEach(cell => cell.reset()),
+		getLevels: () =>
+			liveCells.map(cell => ({
+				commitCount: requiredCommitCount(cell.state!.minColor, cell.state!.color),
+				date: cell.date
+			}))
 	}
 }
 
-function buildCell(data: APICellData | null) {
-	if (!data)
-		return {
-			...buildElement({
-				elementName: "div",
-				className: "canvas-grid-cell",
-				style: {
-					visibility: "hidden"
-				}
-			}),
-			reset: () => {}
-		};
-
+function buildCell(data: APICellData) {
 	const cell = buildElement({
 		elementName: "div",
 		className: "canvas-grid-cell",
@@ -185,8 +211,31 @@ function buildCell(data: APICellData | null) {
 		reset: () => {
 			cell.state!.color = cell.state!.minColor;
 			cell.update();
-		}
+		},
+		date: data.dateOriginal
 	}
+}
+
+function buildDownloadLink(contents: string, filename: string) {
+	const blob = new Blob([contents], { type: 'text/plain' });
+	const url = URL.createObjectURL(blob);
+
+	const link = buildElement({
+		elementName: "a",
+		textContent: "save",
+		prefire: (el) => {
+			el.href = url;
+			el.download = filename;
+		}
+	});
+
+	return {
+		...link,
+		destroy: () => {
+			link.element.remove();
+			URL.revokeObjectURL(url);
+		}
+	};
 }
 
 function getCssColor(color: CellColor) {
