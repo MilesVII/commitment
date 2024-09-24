@@ -17,30 +17,44 @@ export function requiredCommitCount(currentColor: CellColor, targetColor: CellCo
 	return 0;
 }
 
-export function generateCommand(date: string) {
-	const timestamp = `${date}T10:00:00`;
+export type ScriptType = "bat" | "sh";
 
-	return [
+const gitCommand: Record<ScriptType, (timestamp: string) => string> = {
+	sh: (timestamp) => [
+		`GIT_AUTHOR_DATE==${timestamp}`,
+		`GIT_COMMITTER_DATE=${timestamp}`,
+		`git commit --allow-empty -m "Empty commit"`
+	].join("\n"),
+	bat: (timestamp) => [
 		`set GIT_AUTHOR_DATE=${timestamp}`,
 		`set GIT_COMMITTER_DATE=${timestamp}`,
 		`git commit --allow-empty -m "Empty commit"`
 	].join("\n")
 }
 
-const prelude = [
-	`@echo off\n`,
-	`git rev-parse --is-inside-work-tree >nul`,
-	`if errorlevel 1 (`,
-	`	echo "This is not a Git repository"`,
-	`	exit /b 1`,
-	`)`
-].join("\n");
+export function generateCommand(type: ScriptType, date: string) {
+	const timestamp = `${date}T10:00:00`;
 
-export function generateCommandSequence(cells: {date: string, commitCount: number}[]){
+	return (gitCommand[type](timestamp));
+}
+
+const prelude: Record<ScriptType, string> = {
+	sh: [].join("\n"),
+	bat: [
+		`@echo off\n`,
+		`git rev-parse --is-inside-work-tree >nul`,
+		`if errorlevel 1 (`,
+		`	echo "This is not a Git repository"`,
+		`	exit /b 1`,
+		`)`
+	].join("\n")
+};
+
+export function generateCommandSequence(type: ScriptType, cells: {date: string, commitCount: number}[]){
 	const commands = cells.map(
 		cell =>
-			repeat(cell.commitCount, generateCommand(cell.date)).join("\n\n")
+			repeat(cell.commitCount, generateCommand(type, cell.date)).join("\n\n")
 	).join("\n\n");
 
-	return `${prelude}\n\n${commands}`;
+	return `${prelude[type]}\n\n${commands}`;
 }

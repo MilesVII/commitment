@@ -1,5 +1,5 @@
 import { fetchUser } from "./api";
-import { generateCommandSequence } from "./commits";
+import { generateCommandSequence, ScriptType } from "./commits";
 import { buildElement } from "./domkraft";
 import { buildDownloadLink, buildGrid, buildPalette, buildScaler } from "./widgets";
 
@@ -39,7 +39,10 @@ async function onFetchRequested() {
 	}
 	const scaler = buildScaler(updateScale);
 
-	let link: null | ReturnType<typeof buildDownloadLink> = null;
+	const links: Record<ScriptType, null | ReturnType<typeof buildDownloadLink>> = {
+		sh: null,
+		bat: null
+	};
 
 	const resetButton = buildElement({
 		elementName: "button",
@@ -54,13 +57,14 @@ async function onFetchRequested() {
 		events: {
 			"click": () => {
 				const commits = grid.getLevels().filter(c => c.commitCount > 0);
-				const commands = generateCommandSequence(commits);
 				const commitsTotal = commits.reduce((p, c) => p + c.commitCount, 0);
-				
-				if (link) link.destroy()
-				link = buildDownloadLink(commands, "commits.bat", `save .bat (${commitsTotal} commits)`);
-				
-				controls?.append(link.element);
+				(["bat", "sh"] as ScriptType[])
+					.forEach(type => {
+						const script = generateCommandSequence(type, commits)
+						links[type]?.destroy()
+						links[type] = buildDownloadLink(script, `commits.${type}`, `save .${type} (${commitsTotal} commits)`);
+						controls?.append(links[type].element);
+					});
 			}
 		}
 	})
