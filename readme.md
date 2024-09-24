@@ -3,7 +3,7 @@ GitHub contribution graph drawing utility with UI
 
 ## Usage
 
-**[Available at https://commitment.pages.dev/]([https://github.com/MilesVII/arstotzka/blob/master/usage.js](https://commitment.pages.dev/))**
+**[Available at https://commitment.pages.dev/](https://commitment.pages.dev/)**
 
 - Enter your github profile name into the field
 - Click "fetch"
