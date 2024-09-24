@@ -27,11 +27,20 @@ export function generateCommand(date: string) {
 	].join("\n")
 }
 
+const prelude = [
+	`@echo off\n`,
+	`git rev-parse --is-inside-work-tree >nul`,
+	`if errorlevel 1 (`,
+	`	echo "This is not a Git repository"`,
+	`	exit /b 1`,
+	`)`
+].join("\n");
+
 export function generateCommandSequence(cells: {date: string, commitCount: number}[]){
 	const commands = cells.map(
 		cell =>
 			repeat(cell.commitCount, generateCommand(cell.date)).join("\n\n")
 	).join("\n\n");
 
-	return `@echo off\n\n${commands}`;
+	return `${prelude}\n\n${commands}`;
 }

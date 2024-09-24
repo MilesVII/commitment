@@ -56,9 +56,10 @@ async function onFetchRequested() {
 			"click": () => {
 				const commits = grid.getLevels().filter(c => c.commitCount > 0);
 				const commands = generateCommandSequence(commits);
+				const commitsTotal = commits.reduce((p, c) => p + c.commitCount, 0);
 				
 				if (link) link.destroy()
-				link = buildDownloadLink(commands, "commits.bat");
+				link = buildDownloadLink(commands, "commits.bat", `save .bat (${commitsTotal} commits)`);
 				
 				controls?.append(link.element);
 			}
@@ -216,13 +217,13 @@ function buildCell(data: APICellData) {
 	}
 }
 
-function buildDownloadLink(contents: string, filename: string) {
+function buildDownloadLink(contents: string, filename: string, caption: string) {
 	const blob = new Blob([contents], { type: 'text/plain' });
 	const url = URL.createObjectURL(blob);
 
 	const link = buildElement({
 		elementName: "a",
-		textContent: "save",
+		textContent: caption,
 		prefire: (el) => {
 			el.href = url;
 			el.download = filename;
