@@ -3,6 +3,8 @@ GitHub contribution graph drawing utility with UI
 
 ## Usage
 
+**[Available at https://commitment.pages.dev/](https://commitment.milesseventh.workers.dev/)**
+
 - Enter your github profile name into the field
 - Click "fetch"
 - Once data is fetched, a grid resembling GitHub contribution graph will be shown
