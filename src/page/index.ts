@@ -1,7 +1,7 @@
 import { mudcrack } from "rampike";
 import { fetchUser } from "./api";
-import { generateCommandSequence, ScriptType } from "./commits";
-import { buildDownloadLink, buildGrid, buildPalette, buildScaler } from "./widgets";
+import { deriveThresholds, generateCommandSequence, ScriptType } from "./commits";
+import { buildDownloadLink, buildGrid, buildPalette, buildScaler, buildThresholdsCaption } from "./widgets";
 
 main();
 
@@ -24,7 +24,8 @@ async function onFetchRequested() {
 	if (!contributions) return;
 	
 	const pads = contributions[0]?.weekday ?? 0;
-	const grid = buildGrid(pads, contributions);
+	const thresholds = deriveThresholds(contributions);
+	const grid = buildGrid(pads, contributions, thresholds);
 
 	const controls = document.querySelector("#controls-container")!;
 	controls.innerHTML = "";
@@ -33,7 +34,8 @@ async function onFetchRequested() {
 	canvasContainer!.innerHTML = "";
 	canvasContainer?.append(grid.grid);
 	
-	const palette = buildPalette();
+	const palette = buildPalette(thresholds);
+	const thresholdsCaption = buildThresholdsCaption(thresholds);
 	const updateScale = (scale: number) => {
 		grid.grid.style.setProperty("--cell-size", `${scale * 70}px`);
 	};
@@ -74,5 +76,5 @@ async function onFetchRequested() {
 		contents: [resetButton, generateButton]
 	});
 
-	controls.append(palette, scaler, buttonRow);
+	controls.append(palette, thresholdsCaption, scaler, buttonRow);
 }

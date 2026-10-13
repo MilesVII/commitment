@@ -1,3 +1,15 @@
+export type APICell = {
+	date: string,
+	level: number,
+	count: number
+};
+
+function parseContributionCount(tooltip: string): number | null {
+	// "3 contributions on October 12th." / "1 contribution on ..." / "No contributions on ..."
+	const match = tooltip.trim().match(/^(\d+|No) contributions?\b/);
+	if (!match) return null;
+	return match[1] === "No" ? 0 : parseInt(match[1], 10);
+}
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
@@ -30,7 +42,10 @@ export default {
 		const ghPage = await fetch(url, { headers });
 
 		if (ghPage.status === 200) {
-			const cells: { date: string, level: string }[] = [];
+			// Every day is a <td data-date data-level id="contribution-day-component-X-Y">,
+			// its contribution count lives in a separate <tool-tip for="contribution-day-component-X-Y">
+			const cells: { id: string | null, date: string, level: number }[] = [];
+			const counts = new Map<string, number>();
 
 			const cellHandler = {
 				element: (e: Element) => {
@@ -38,17 +53,42 @@ export default {
 					const level = e.getAttribute("data-level");
 					if (date === null || level === null) return;
 
-					cells.push({ date, level });
+					cells.push({ id: e.getAttribute("id"), date, level: parseInt(level, 10) });
 				}
-			}
-			
+			};
+
+			let tooltipFor: string | null = null;
+			let tooltipText = "";
+			const tooltipHandler = {
+				element: (e: Element) => {
+					tooltipFor = e.getAttribute("for");
+					tooltipText = "";
+				},
+				text: (t: Text) => {
+					if (tooltipFor === null) return;
+					tooltipText += t.text;
+					if (!t.lastInTextNode) return;
+
+					const count = parseContributionCount(tooltipText);
+					if (count !== null) counts.set(tooltipFor, count);
+				}
+			};
+
 			const rewriter = new HTMLRewriter();
 
 			rewriter.on("td", cellHandler);
+			rewriter.on("tool-tip", tooltipHandler);
 
 			await rewriter.transform(ghPage).text();
 
-			return new Response(JSON.stringify(cells), {
+			const result: APICell[] = cells.map(cell => ({
+				date: cell.date,
+				level: cell.level,
+				// if GitHub changes tooltip markup, fall back to the old guess (level 0 => 0, otherwise unknown)
+				count: (cell.id === null ? undefined : counts.get(cell.id)) ?? (cell.level === 0 ? 0 : -1)
+			}));
+
+			return new Response(JSON.stringify(result), {
 				status: 200,
 				headers: {
 					"Content-Type": "application/json",

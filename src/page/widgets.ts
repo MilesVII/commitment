@@ -1,6 +1,6 @@
 import { mudcrack, rampike } from "rampike";
 import type { APICellData, CellColor } from "./api";
-import { requiredCommitCount } from "./commits";
+import { requiredCommitCount, type LevelThresholds } from "./commits";
 import { range, repeat, WEEKDAY_NAMES } from "./utils";
 
 const globalState = {
@@ -8,12 +8,15 @@ const globalState = {
 	username: null as (null | string)
 }
 
-export function buildPalette() {
+export function buildPalette(thresholds: LevelThresholds) {
 	function buildColorOption(color: CellColor, onSelect: () => void) {
 		return rampike(
 			mudcrack({
 				tagName: "div",
 				className: "palette-option",
+				attributes: {
+					title: `level ${color}: ${describeThreshold(color, thresholds)} contributions`
+				},
 				style: {
 					backgroundColor: getCssColor(color)
 				},
@@ -44,9 +47,34 @@ export function buildPalette() {
 		);
 
 	return mudcrack({
+		tagName: "div",
 		className: "palette",
 		contents: options
 	});
+}
+
+export function buildThresholdsCaption(thresholds: LevelThresholds) {
+	const levels = (range(0, 5) as CellColor[])
+		.map(color => describeThreshold(color, thresholds))
+		.join(" / ");
+
+	return mudcrack({
+		tagName: "div",
+		className: "thresholds-caption",
+		attributes: {
+			title: "GitHub picks colors relative to your own activity, so these are derived from the fetched graph"
+		},
+		contents: `contributions per level: ${levels}`
+	});
+}
+
+function describeThreshold(color: CellColor, thresholds: LevelThresholds) {
+	if (color === 0) return "0";
+	if (color === 4) return `${thresholds[4]}+`;
+	const next = thresholds[(color + 1) as CellColor];
+	return next - 1 > thresholds[color]
+		? `${thresholds[color]}-${next - 1}`
+		: `${thresholds[color]}`;
 }
 
 export function buildScaler(updateScale: (scale: number) => void) {
@@ -71,7 +99,7 @@ export function buildScaler(updateScale: (scale: number) => void) {
 	})
 }
 
-export function buildGrid(pads: number, cellData: APICellData[]) {
+export function buildGrid(pads: number, cellData: APICellData[], thresholds: LevelThresholds) {
 	const deadCells = repeat(pads, null).map(
 		() => ({
 			cell: mudcrack({
@@ -99,9 +127,9 @@ export function buildGrid(pads: number, cellData: APICellData[]) {
 		grid,
 		reset: () => liveCells.forEach(cell => cell.reset()),
 		getLevels: () =>
-			liveCells.map(({ cell, date }) => ({
-				commitCount: requiredCommitCount(cell.rampike.params.minColor, cell.rampike.params.color),
-				date
+			liveCells.map(({ cell, data }) => ({
+				commitCount: requiredCommitCount(data, cell.rampike.params.color, thresholds),
+				date: data.dateOriginal
 			}))
 	}
 }
@@ -113,13 +141,14 @@ export function buildCell(data: APICellData) {
 		minColor
 	};
 	let update = () => {};
+	const contributions = data.count >= 0 ? `${data.count} contributions` : "unknown contributions";
 	const cell =
 		rampike(
 			mudcrack({
 				tagName: "div",
 				className: "canvas-grid-cell",
 				attributes: {
-					title: `${data.dateOriginal}: ${WEEKDAY_NAMES[data.weekday]}`
+					title: `${data.dateOriginal}: ${WEEKDAY_NAMES[data.weekday]}, ${contributions}`
 				},
 				events: {
 					pointerdown: () => {
@@ -151,11 +180,11 @@ export function buildCell(data: APICellData) {
 
 	return {
 		cell,
+		data,
 		reset: () => {
 			state.color = minColor;
 			update();
-		},
-		date: data.dateOriginal
+		}
 	}
 }
 

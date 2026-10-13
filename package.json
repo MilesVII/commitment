@@ -22,6 +22,6 @@
 		"wrangler": "^4.45.2"
 	},
 	"dependencies": {
-		"rampike": "^0.0.8"
+		"rampike": "^0.0.14"
 	}
 }
