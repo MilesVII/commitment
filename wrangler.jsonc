@@ -8,10 +8,11 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2025-10-29",
 	"observability": {
-		"enabled": true
+		"enabled": false
 	},
 	"assets": {
 		"directory": "page",
 		"binding": "ASSETS"
-	}
+	},
+	"preview_urls": false
 }
